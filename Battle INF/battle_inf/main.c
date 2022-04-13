@@ -12,7 +12,8 @@
 //Structs
 typedef struct player{
     Vector2 posicao;
-    Rectangle retJogador1;
+    Vector2 origin;
+    Rectangle source;
     Rectangle retJogador;
     float rotacao;
     int vidas;
@@ -46,7 +47,6 @@ void menu (int screenWidth){
     DrawText("Fase 1", 442, 7, 30, GOLD);
 }
 
-//Blocos da fase 1
 void blocosFase1 (Texture2D texturaTijolos){
     for (int i=65; i<=275; i += 30)
         DrawTexture(texturaTijolos, i, 230, LIGHTGRAY);
@@ -130,6 +130,8 @@ int main(void){
                 //Jogador
                 Player jogador;
                 jogador.posicao = (Vector2){(float)screenWidth/2, (float)screenHeight/2};
+                jogador.origin = (Vector2){16.5, 21.5};
+                jogador.source = (Rectangle){(float)screenWidth/2 + 28, (float)screenHeight/2 + 1, 34, 44};
                 jogador.vidas = 3;
                 jogador.rotacao = 0.0;
                 float x;
@@ -176,30 +178,26 @@ int main(void){
                     if (IsKeyDown(KEY_RIGHT)){
                         jogador.posicao.x += 3.0f;
                         jogador.rotacao = 90;
-                        jogador.retJogador = (Rectangle){jogador.posicao.x - 45.5, jogador.posicao.y, 44, 33};
-                        //jogador.retJogador = (Rectangle){jogador.posicao.x, jogador.posicao.y, 44, 33};
+                        jogador.retJogador = (Rectangle){jogador.posicao.x - 23, jogador.posicao.y - 16.5, 44, 33};
                     }
                     if (IsKeyDown(KEY_LEFT)){
                         jogador.posicao.x -= 3.0f;
                         jogador.rotacao = -90;
-                        jogador.retJogador = (Rectangle){jogador.posicao.x + 2, jogador.posicao.y - 33, 44, 33};
-                        //jogador.retJogador = (Rectangle){jogador.posicao.x, jogador.posicao.y, 44, 33};
+                        jogador.retJogador = (Rectangle){jogador.posicao.x - 23, jogador.posicao.y - 16.5, 44, 33};
                     }
                     if (IsKeyDown(KEY_UP)){
                         jogador.posicao.y -= 3.0f;
                         jogador.rotacao = 0;
-                        jogador.retJogador = (Rectangle){jogador.posicao.x, jogador.posicao.y + 2, 33, 44};
-                        //jogador.retJogador = (Rectangle){jogador.posicao.x, jogador.posicao.y, 33, 44};
+                        jogador.retJogador = (Rectangle){jogador.posicao.x - 16.5, jogador.posicao.y - 21.5, 33, 44};
                     }
                     if (IsKeyDown(KEY_DOWN)){
                         jogador.posicao.y += 3.0f;
                         jogador.rotacao = 180;
-                        jogador.retJogador = (Rectangle){jogador.posicao.x - 33, jogador.posicao.y - 45, 33, 44};
-                        //jogador.retJogador = (Rectangle){jogador.posicao.x, jogador.posicao.y, 33, 44};
+                        jogador.retJogador = (Rectangle){jogador.posicao.x - 16.5, jogador.posicao.y - 21.5, 33, 44};
                     }
 
                     //Retangulos do jogador e do inimigo
-                    //jogador.retJogador = (Rectangle){jogador.posicao.x, jogador.posicao.y, 33, 44};
+                    jogador.retJogador = (Rectangle){jogador.posicao.x, jogador.posicao.y, 33, 44};
                     inimigo.retInimigo = (Rectangle){inimigo.posicao.x, inimigo.posicao.y, 38, 44};
 
                     //Check Collision
@@ -252,12 +250,12 @@ int main(void){
                         DrawTexture(texturaShield, 50, 5, corShield[1]);
                         DrawTexture(texturaShield, 90, 5, corShield[2]);
 
-                        DrawRectangleRec(jogador.retJogador, BLACK);
-                        DrawTextureEx(texturaJogador, jogador.posicao, jogador.rotacao, 1, LIGHTGRAY);
-
-                        //DrawTexture(texturaJogador, jogador.posicao.x, jogador.posicao.y, LIGHTGRAY);
+                        DrawTexturePro(texturaJogador, jogador.source, jogador.retJogador, jogador.origin, jogador.rotacao, LIGHTGRAY);
                         DrawTexture(texturaInimigo, inimigo.posicao.x, inimigo.posicao.y, LIGHTGRAY);
-                        blocosFase1(texturaTijolos); //Desenhando os blocos da fase 1
+
+                        blocosFase1 (texturaTijolos);
+
+
 
                     EndDrawing();
                 }
