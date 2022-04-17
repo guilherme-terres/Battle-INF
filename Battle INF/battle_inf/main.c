@@ -18,6 +18,7 @@ typedef struct player{
     Rectangle retCollision;
     float rotacao;
     int vidas;
+    int pontos;
 } Player; //Jogador
 
 typedef struct enemy{
@@ -28,6 +29,14 @@ typedef struct enemy{
     Rectangle retCollision;
     float rotacao;
 } Enemy; //Inimigo
+
+typedef struct energy{
+    Vector2 posicao;
+    Rectangle retEnergia;
+    int ativacao;
+} Energy;
+
+/*Tiros do jogador*/
 
 typedef struct shootRight{
     Vector2 velocidade;
@@ -69,6 +78,50 @@ typedef struct ShootDown{
     Rectangle retTiroBaixo;
 } ShootDown; //Tiro baixo
 
+/*--------------------------*/
+
+/*Tiros do inimigo*/
+typedef struct ShootRightI{
+    Vector2 velocidade;
+    Vector2 posicao;
+    Color corTiro;
+    int ativacao;
+    int lifeSpawn;
+    float raio;
+    Rectangle retTiroDirI;
+} ShootRightI; //Tiro direita
+
+typedef struct ShootLeftI{
+    Vector2 velocidade;
+    Vector2 posicao;
+    Color corTiro;
+    int ativacao;
+    int lifeSpawn;
+    float raio;
+    Rectangle retTiroEsqI;
+} ShootLeftI; //Tiro esquerda
+
+typedef struct ShootUpI{
+    Vector2 velocidade;
+    Vector2 posicao;
+    Color corTiro;
+    int ativacao;
+    int lifeSpawn;
+    float raio;
+    Rectangle retTiroCimaI;
+} ShootUpI; //Tiro cima
+
+typedef struct ShootDownI{
+    Vector2 velocidade;
+    Vector2 posicao;
+    Color corTiro;
+    int ativacao;
+    int lifeSpawn;
+    float raio;
+    Rectangle retTiroBaixoI;
+} ShootDownI; //Tiro baixo
+
+/*--------------------------*/
 
 typedef struct rectangles{
     //Fase 1
@@ -128,6 +181,22 @@ int collisionPlayerBordas (Rectangles bordas, Player jogador){
     else retorno = FALSE;
 
     return retorno;
+} //Colisão do player com as bordas
+
+int collisionTiroDirTij (Rectangles tijolos, ShootRight *tiroDireita){
+    int retorno;
+
+    if (CheckCollisionRecs(tijolos.tamanho[0], tiroDireita->retTiroDir)
+    || CheckCollisionRecs(tijolos.tamanho[1], tiroDireita->retTiroDir)
+    || CheckCollisionRecs(tijolos.tamanho[2], tiroDireita->retTiroDir)
+    || CheckCollisionRecs(tijolos.tamanho[3], tiroDireita->retTiroDir)
+    || CheckCollisionRecs(tijolos.tamanho[4], tiroDireita->retTiroDir)
+    || CheckCollisionRecs(tijolos.tamanho[5], tiroDireita->retTiroDir)
+    || CheckCollisionRecs(tijolos.tamanho[6], tiroDireita->retTiroDir))
+        retorno == TRUE;
+    else retorno == FALSE;
+
+    return retorno;
 }
 
 int main(void){
@@ -176,8 +245,6 @@ int main(void){
             else corTexto[3] = LIGHTGRAY; //Mudança de cor
 
             if (CheckCollisionPointRec(ponteiroMouse, novoJogo) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-                SetRandomSeed(time(NULL));
-
                 //Cores
                 Color corShield[3] = {WHITE, WHITE, WHITE};
 
@@ -193,6 +260,9 @@ int main(void){
 
                 Image ImgShield = LoadImage("recursos/shield1.png");
                 Texture2D texturaShield = LoadTextureFromImage(ImgShield); //Shield
+
+                Image ImgEnergy = LoadImage("recursos/energy_drop1.png");
+                Texture2D texturaEnergia = LoadTextureFromImage(ImgEnergy); //Energia
 
                 /*RETANGULOS DA FASE 1*/
                 //Tijolos
@@ -221,6 +291,7 @@ int main(void){
                 jogador.source = (Rectangle){(float)screenWidth/2 + 28, (float)screenHeight/2 + 1, 33, 43};
                 jogador.vidas = 3;
                 jogador.rotacao = 0.0;
+                jogador.pontos = 0;
                 float x;
                 float y;
                     /*OBS: variáveis referentes aos tiros - ativação*/
@@ -231,14 +302,20 @@ int main(void){
 
                 //Inimigo
                 Enemy inimigo;
-                inimigo.posicao = (Vector2){(float)GetRandomValue(0,screenWidth), (float)GetRandomValue(40, screenHeight)};
+                inimigo.posicao = (Vector2){(float)GetRandomValue(19,screenWidth), (float)GetRandomValue(60, screenHeight)};
                 inimigo.origin = (Vector2){19, 22};
                 inimigo.source = (Rectangle){(float)screenWidth/2 + 32, (float)screenHeight/2 + 8, 38, 44};
                 inimigo.retCollision = (Rectangle){inimigo.posicao.x  -19, inimigo.posicao.y -22, 38, 44};
                 inimigo.rotacao = 0.0;
+                float x1;
+                float y1;
+                    /*OBS: variáveis referentes à movimentação aleatória do inímigo*/
+                    int direita1;
+                    int esquerda1;
+                    int cima1;
+                    int baixo1;
 
-                /*-------------------------------------------------------------------------------------------------------*/
-
+                /*----------------------------------- TIROS DO JOGADOR --------------------------------------*/
                 //Tiro pra direita
                 ShootRight tiroDireita[MAXTIROS] = {0};
                 for (int i=0; i<MAXTIROS; i++){
@@ -265,7 +342,7 @@ int main(void){
                 ShootUp tiroCima[MAXTIROS] = {0};
                 for (int i=0; i<MAXTIROS; i++){
                     tiroCima[i].posicao = (Vector2){jogador.posicao.x + 30, jogador.posicao.y - 16.5};
-                    tiroCima[i].velocidade.x = 4;
+                    tiroCima[i].velocidade.y = 4;
                     tiroCima[i].raio = 4;
                     tiroCima[i].ativacao = FALSE;
                     tiroCima[i].corTiro = DARKGRAY;
@@ -276,19 +353,74 @@ int main(void){
                 ShootDown tiroBaixo[MAXTIROS] = {0};
                 for (int i = 0; i<MAXTIROS; i++){
                     tiroBaixo[i].posicao = (Vector2){jogador.posicao.x + 30, jogador.posicao.y - 16.5};
-                    tiroBaixo[i].velocidade.x = 4;
+                    tiroBaixo[i].velocidade.y = 4;
                     tiroBaixo[i].raio = 4;
                     tiroBaixo[i].ativacao = FALSE;
                     tiroBaixo[i].corTiro = DARKGRAY;
                     tiroBaixo[i].lifeSpawn = 0;
                 }
+                /*-------------------------------------------------------------------------------------------*/
 
-                /*-----------------------------------------------------------------------------------------------------*/
+                /*----------------------------------- TIROS DO INIMIGO --------------------------------------*/
+                //Tiro pra direita
+                ShootRightI tiroDireitaI[MAXTIROS] = {0};
+                for (int i = 0; i<MAXTIROS; i++){
+                    tiroDireitaI[i].posicao = (Vector2){inimigo.posicao.x + 30, inimigo.posicao.y - 16.5};
+                    tiroDireitaI[i].velocidade.x = 4;
+                    tiroDireitaI[i].raio = 4;
+                    tiroDireitaI[i].ativacao = FALSE;
+                    tiroDireitaI[i].corTiro = DARKGRAY;
+                    tiroDireitaI[i].lifeSpawn = 0;
+                }
+
+                //Tiro pra esquerda
+                ShootLeftI tiroEsquerdaI[MAXTIROS] = {0};
+                for (int i=0; i<MAXTIROS; i++){
+                    tiroEsquerdaI[i].posicao = (Vector2){inimigo.posicao.x + 30, inimigo.posicao.y - 16.5};
+                    tiroEsquerdaI[i].velocidade.x = 4;
+                    tiroEsquerdaI[i].raio = 4;
+                    tiroEsquerdaI[i].ativacao = FALSE;
+                    tiroEsquerdaI[i].corTiro = DARKGRAY;
+                    tiroEsquerdaI[i].lifeSpawn = 0;
+                }
+
+                //Tiro pra cima
+                ShootUpI tiroCimaI[MAXTIROS] = {0};
+                for (int i=0; i<MAXTIROS; i++){
+                    tiroCimaI[i].posicao = (Vector2){inimigo.posicao.x + 30, inimigo.posicao.y - 16.5};
+                    tiroCimaI[i].velocidade.y = 4;
+                    tiroCimaI[i].raio = 4;
+                    tiroCimaI[i].ativacao = FALSE;
+                    tiroCimaI[i].corTiro = DARKGRAY;
+                    tiroCimaI[i].lifeSpawn = 0;
+                }
+
+                //Tiro pra baixo
+                ShootDownI tiroBaixoI[MAXTIROS] = {0};
+                for (int i=0; i<MAXTIROS; i++){
+                    tiroBaixoI[i].posicao = (Vector2){inimigo.posicao.x + 30, inimigo.posicao.y - 16.5};
+                    tiroBaixoI[i].velocidade.y = 4;
+                    tiroBaixoI[i].raio = 4;
+                    tiroBaixoI[i].ativacao = FALSE;
+                    tiroBaixoI[i].corTiro = DARKGRAY;
+                    tiroBaixoI[i].lifeSpawn = 0;
+                }
+                /*-------------------------------------------------------------------------------------------*/
 
                 while (!WindowShouldClose()){
                     /*UPDATE*/
+                    //Randômico
+                    SetRandomSeed(time(NULL));
+                    int randomMove;
+                    int tiroInimigo;
+                    randomMove = GetRandomValue(0,16);
+                    tiroInimigo = GetRandomValue(0,16);
+
                     x = jogador.posicao.x;
                     y = jogador.posicao.y;
+
+                    x1 = inimigo.posicao.x;
+                    y1 = inimigo.posicao.y;
 
                     jogador.retJogador = (Rectangle){jogador.posicao.x + 5, jogador.posicao.y + 16.5, 33, 44};
 
@@ -330,26 +462,42 @@ int main(void){
                         baixo = TRUE;
                     }
 
-                    /*LÓGICA PARA ROTACAO DO TANQUE INIMIGO*/
-                    if (IsKeyDown(KEY_D)){
+                    /*MOVIMENTAÇÃO ALEATÓRIA DO TANQUE INIMIGO*/
+                    if (randomMove == 1 || randomMove == 2 || randomMove == 3 || randomMove == 4){
                         inimigo.posicao.x += 3.0f;
                         inimigo.rotacao = 90;
                         inimigo.retCollision = (Rectangle){inimigo.posicao.x - 22, inimigo.posicao.y - 19, 44, 38};
+                        direita1 = TRUE;
+                        esquerda1 = FALSE;
+                        cima1 = FALSE;
+                        baixo1 = FALSE;
                     }
-                    if (IsKeyDown(KEY_A)){
+                    if (randomMove == 5 || randomMove == 6 || randomMove == 7 || randomMove == 8){
                         inimigo.posicao.x -= 3.0f;
                         inimigo.rotacao = -90;
                         inimigo.retCollision = (Rectangle){inimigo.posicao.x -22, inimigo.posicao.y - 19, 44, 38};
+                        direita1 = FALSE;
+                        esquerda1 = TRUE;
+                        cima1 = FALSE;
+                        baixo1 = FALSE;
                     }
-                    if (IsKeyDown(KEY_W)){
+                    if (randomMove == 9 || randomMove == 10 || randomMove == 11 || randomMove == 12){
                         inimigo.posicao.y -= 3.0f;
                         inimigo.rotacao = 0;
                         inimigo.retCollision = (Rectangle){inimigo.posicao.x -19, inimigo.posicao.y -22, 38, 44};
+                        direita1 = FALSE;
+                        esquerda1 = FALSE;
+                        cima1 = TRUE;
+                        baixo1 = FALSE;
                     }
-                    if (IsKeyDown(KEY_S)){
+                    if (randomMove == 13 || randomMove == 14 || randomMove == 15 || randomMove == 16){
                         inimigo.posicao.y += 3.0f;
                         inimigo.rotacao = 180;
                         inimigo.retCollision = (Rectangle){inimigo.posicao.x -19, inimigo.posicao.y -22, 38, 44};
+                        direita1 = FALSE;
+                        esquerda1 = FALSE;
+                        cima1 = FALSE;
+                        baixo1 = TRUE;
                     }
 
                     /*TIROS*/
@@ -357,12 +505,11 @@ int main(void){
                     for (int i=0; i<MAXTIROS; i++){
                         if (IsKeyPressed(KEY_SPACE) && direita == TRUE){
                             if (!tiroDireita[i].ativacao){
-                                tiroDireita[i].posicao = (Vector2){jogador.posicao.x + 30, jogador.posicao.y};
+                                tiroDireita[i].posicao = (Vector2){jogador.posicao.x, jogador.posicao.y};
                                 tiroDireita[i].ativacao = TRUE;
                             }
                         }
                     }
-
                     for (int i=0; i<MAXTIROS; i++){
                         if (tiroDireita[i].ativacao){
                             tiroDireita[i].posicao.x += 4;
@@ -374,7 +521,6 @@ int main(void){
                             }
                         }
                     }
-
                     //Tiro pra esquerda
                     for (int i=0; i<MAXTIROS; i++){
                         if (IsKeyPressed(KEY_SPACE) && esquerda == TRUE){
@@ -384,20 +530,17 @@ int main(void){
                             }
                         }
                     }
-
                     for (int i=0; i<MAXTIROS; i++){
                         if (tiroEsquerda[i].ativacao){
                             tiroEsquerda[i].posicao.x -= 4;
                             tiroEsquerda[i].lifeSpawn++;
 
-                            if (tiroEsquerda[i].posicao.x < 0) tiroEsquerda[i].ativacao = FALSE;
                             if (tiroEsquerda[i].ativacao){
                                 DrawCircleV(tiroEsquerda[i].posicao, tiroEsquerda[i].raio, DARKGRAY);
                                 tiroEsquerda[i].retTiroEsq = (Rectangle){tiroEsquerda[i].posicao.x, tiroEsquerda[i].posicao.y, 4, 4};
                             }
                         }
                     }
-
                     //Tiro pra cima
                     for (int i=0; i<MAXTIROS; i++){
                         if (IsKeyPressed(KEY_SPACE) && cima == TRUE){
@@ -407,7 +550,6 @@ int main(void){
                             }
                         }
                     }
-
                     for (int i=0; i<MAXTIROS; i++){
                         if (tiroCima[i].ativacao){
                             tiroCima[i].posicao.y -= 4;
@@ -419,7 +561,6 @@ int main(void){
                             }
                         }
                     }
-
                     //Tiro pra baixo
                     for (int i=0; i<MAXTIROS; i++){
                         if (IsKeyPressed(KEY_SPACE) && baixo == TRUE){
@@ -429,7 +570,6 @@ int main(void){
                             }
                         }
                     }
-
                     for (int i=0; i<MAXTIROS; i++){
                         if (tiroBaixo[i].ativacao){
                             tiroBaixo[i].posicao.y += 4;
@@ -442,7 +582,88 @@ int main(void){
                         }
                     }
 
-                    /*----------------------------------------------------------------*/
+                    /*----------------------------------- TIROS DO INIMIGO --------------------------------------*/
+                    //Tiro pra direita
+                    for (int i=0; i<MAXTIROS; i++){
+                        if (tiroInimigo == 0 && direita1 == TRUE){
+                            if (!tiroDireitaI[i].ativacao){
+                                tiroDireitaI[i].posicao = (Vector2){inimigo.posicao.x + 30, inimigo.posicao.y};
+                                tiroDireitaI[i].ativacao = TRUE;
+                            }
+                        }
+                    }
+                    for (int i=0; i<MAXTIROS; i++){
+                        if (tiroDireitaI[i].ativacao){
+                            tiroDireitaI[i].posicao.x += 4;
+                            tiroDireitaI[i].lifeSpawn++;
+
+                            if (tiroDireitaI[i].ativacao){
+                                DrawCircleV(tiroDireitaI[i].posicao, tiroDireitaI[i].raio, DARKGRAY);
+                                tiroDireitaI[i].retTiroDirI = (Rectangle){tiroDireitaI[i].posicao.x, tiroDireitaI[i].posicao.y, 4, 4};
+                            }
+                        }
+                    }
+                    //Tiro pra esquerda
+                    for (int i=0; i<MAXTIROS; i++){
+                        if (tiroInimigo == 0 && esquerda1 == TRUE){
+                            if (!tiroEsquerdaI[i].ativacao){
+                                tiroEsquerdaI[i].posicao = (Vector2){inimigo.posicao.x + 30, inimigo.posicao.y};
+                                tiroEsquerdaI[i].ativacao = TRUE;
+                            }
+                        }
+                    }
+                    for (int i=0; i<MAXTIROS; i++){
+                        if (tiroEsquerdaI[i].ativacao){
+                            tiroEsquerdaI[i].posicao.x -= 4;
+                            tiroEsquerdaI[i].lifeSpawn++;
+
+                            if (tiroEsquerdaI[i].ativacao){
+                                DrawCircleV(tiroEsquerdaI[i].posicao, tiroEsquerdaI[i].raio, DARKGRAY);
+                                tiroEsquerdaI[i].retTiroEsqI = (Rectangle){tiroEsquerdaI[i].posicao.x, tiroEsquerdaI[i].posicao.y, 4, 4};
+                            }
+                        }
+                    }
+                    //Tiro pra cima
+                    for (int i=0; i<MAXTIROS; i++){
+                        if (tiroInimigo == 0 && cima1 == TRUE){
+                            if (!tiroCimaI[i].ativacao){
+                                tiroCimaI[i].posicao = (Vector2){inimigo.posicao.x + 30, inimigo.posicao.y};
+                                tiroCimaI[i].ativacao = TRUE;
+                            }
+                        }
+                    }
+                    for (int i=0; i<MAXTIROS; i++){
+                        if (tiroCimaI[i].ativacao){
+                            tiroCimaI[i].posicao.y -= 4;
+                            tiroCimaI[i].lifeSpawn++;
+
+                            if (tiroCimaI[i].ativacao){
+                                DrawCircleV(tiroCimaI[i].posicao, tiroCimaI[i].raio, DARKGRAY);
+                                tiroCimaI[i].retTiroCimaI = (Rectangle){tiroCimaI[i].posicao.x, tiroCimaI[i].posicao.y, 4, 4};
+                            }
+                        }
+                    }
+                    //Tiro pra baixo
+                    for (int i=0; i<MAXTIROS; i++){
+                        if (tiroInimigo == 0 && baixo1 == TRUE){
+                            if (!tiroBaixoI[i].ativacao){
+                                tiroBaixoI[i].posicao = (Vector2){inimigo.posicao.x + 30, inimigo.posicao.y};
+                                tiroBaixoI[i].ativacao = TRUE;
+                            }
+                        }
+                    }
+                    for (int i=0; i<MAXTIROS; i++){
+                        if (tiroBaixoI[i].ativacao){
+                            tiroBaixoI[i].posicao.y += 4;
+                            tiroBaixoI[i].lifeSpawn++;
+
+                            if (tiroBaixoI[i].ativacao){
+                                DrawCircleV(tiroBaixoI[i].posicao, tiroBaixoI[i].raio, DARKGRAY);
+                                tiroBaixoI[i].retTiroBaixoI = (Rectangle){tiroBaixoI[i].posicao.x, tiroBaixoI[i].posicao.y, 4, 4};
+                            }
+                        }
+                    }
+                    /*-------------------------------------------------------------------------------------------*/
 
                     //Retangulos do jogador e do inimigo
                     jogador.retJogador = (Rectangle){jogador.posicao.x, jogador.posicao.y, 33, 43};
@@ -474,6 +695,14 @@ int main(void){
                                 tiroDireita[i].ativacao = FALSE;
                         } //Tiro pra Direita
 
+                    if (CheckCollisionRecs(inimigo.retCollision, tiroDireita->retTiroDir)){
+                        for (int i=0; i<MAXTIROS; i++){
+                            tiroDireita[i].ativacao = FALSE;
+                            tiroDireita[i].retTiroDir = (Rectangle){-1, -1, 0, 0};
+                        }
+                        jogador.pontos += 800;
+                    } //Tiro pra direita; colisão com o tanque inimigo; soma pontuação
+
                     if (CheckCollisionRecs(tijolos.tamanho[0], tiroEsquerda->retTiroEsq)
                         || CheckCollisionRecs(tijolos.tamanho[1], tiroEsquerda->retTiroEsq)
                         || CheckCollisionRecs(tijolos.tamanho[2], tiroEsquerda->retTiroEsq)
@@ -488,6 +717,14 @@ int main(void){
                             for (int i=0; i<MAXTIROS; i++)
                                 tiroEsquerda[i].ativacao = FALSE;
                         } //Tiro pra Esquerda
+
+                    if (CheckCollisionRecs(inimigo.retCollision, tiroEsquerda->retTiroEsq)){
+                        for (int i=0; i<MAXTIROS; i++){
+                            tiroEsquerda[i].ativacao = FALSE;
+                            tiroEsquerda[i].retTiroEsq = (Rectangle){-1, -1, 0, 0};
+                        }
+                        jogador.pontos += 800;
+                    } // Tiro pra esquerda; colisão com o tanque inimigo; soma pontuação
 
                     if (CheckCollisionRecs(tijolos.tamanho[0], tiroCima->retTiroCima)
                         || CheckCollisionRecs(tijolos.tamanho[1], tiroCima->retTiroCima)
@@ -504,6 +741,14 @@ int main(void){
                                 tiroCima[i].ativacao = FALSE;
                         } //Tiro pra cima
 
+                    if (CheckCollisionRecs(inimigo.retCollision, tiroCima->retTiroCima)){
+                        for (int i=0; i<MAXTIROS; i++){
+                            tiroCima[i].ativacao = FALSE;
+                            tiroCima[i].retTiroCima = (Rectangle){-1, -1, 0, 0};
+                        }
+                        jogador.pontos += 800;
+                    } //Tiro pra cima; colisão com tanque inimigo; soma pontuação
+
                     if (CheckCollisionRecs(tijolos.tamanho[0], tiroBaixo->retTiroBaixo)
                         || CheckCollisionRecs(tijolos.tamanho[1], tiroBaixo->retTiroBaixo)
                         || CheckCollisionRecs(tijolos.tamanho[2], tiroBaixo->retTiroBaixo)
@@ -519,8 +764,16 @@ int main(void){
                                 tiroBaixo[i].ativacao = FALSE;
                         } //Tiro pra baixo
 
-                    /*LÓGICA PARA COLISÃO DO INIMIGO - INCOMPLETA*/
-                    /*
+                    if (CheckCollisionRecs(inimigo.retCollision, tiroBaixo->retTiroBaixo)){
+                        for (int i=0; i<MAXTIROS; i++){
+                            tiroBaixo[i].ativacao = FALSE;
+                            tiroBaixo[i].retTiroBaixo = (Rectangle){-1, -1, 0, 0};
+                        }
+                        jogador.pontos += 800;
+                    }
+
+                    /*COLISÃO DO INIMIGO*/
+
                     if (CheckCollisionRecs(tijolos.tamanho[0], inimigo.retCollision)
                         || CheckCollisionRecs(tijolos.tamanho[1], inimigo.retCollision)
                         || CheckCollisionRecs(tijolos.tamanho[2], inimigo.retCollision)
@@ -533,13 +786,21 @@ int main(void){
                         || CheckCollisionRecs(bordas.tamanhoB[1], inimigo.retCollision)
                         || CheckCollisionRecs(bordas.tamanhoB[2], inimigo.retCollision)
                         || CheckCollisionRecs(bordas.tamanhoB[3], inimigo.retCollision)){
-                        inimigo.posicao.x = (float)GetRandomValue(0,screenWidth);
-                        inimigo.posicao.y = (float)GetRandomValue(40, screenHeight);
+                        inimigo.posicao.x = x1;
+                        inimigo.posicao.y = y1;
                     } // Inimigo
-                    */
+
 
                     //Vidas
-                    if (CheckCollisionRecs(inimigo.retInimigo, jogador.retJogador)) jogador.vidas = jogador.vidas - 1;
+                    if (CheckCollisionRecs(tiroDireitaI->retTiroDirI, jogador.retCollision)
+                    || CheckCollisionRecs(tiroEsquerdaI->retTiroEsqI, jogador.retCollision)
+                    || CheckCollisionRecs(tiroCimaI->retTiroCimaI, jogador.retCollision)
+                    || CheckCollisionRecs(tiroBaixoI->retTiroBaixoI, jogador.retCollision)){
+                        jogador.vidas = jogador.vidas - 1;
+
+                    }
+
+                    //Apaga os escudos
                     if (jogador.vidas == 2) corShield[2] = BLANK;
                     if (jogador.vidas == 1) corShield[1] = BLANK;
                     if (jogador.vidas == 0) corShield[0] = BLANK;
@@ -549,6 +810,7 @@ int main(void){
                         ClearBackground (LIGHTGRAY);
 
                         menu(screenWidth); // Desenhando menu
+                        DrawText(TextFormat("Pontos: %d", jogador.pontos), 850, 12, 20, GOLD);
                         DrawTexture(texturaShield, 10, 5, corShield[0]);
                         DrawTexture(texturaShield, 50, 5, corShield[1]);
                         DrawTexture(texturaShield, 90, 5, corShield[2]);
@@ -560,6 +822,10 @@ int main(void){
                         DrawRectangleRec(tiroEsquerda->retTiroEsq, BLACK);
                         DrawRectangleRec(tiroCima->retTiroCima, BLACK);
                         DrawRectangleRec(tiroBaixo->retTiroBaixo, BLACK);
+                        DrawRectangleRec(tiroDireitaI->retTiroDirI, BLACK);
+                        DrawRectangleRec(tiroEsquerdaI->retTiroEsqI, BLACK);
+                        DrawRectangleRec(tiroCimaI->retTiroCimaI, BLACK);
+                        DrawRectangleRec(tiroBaixoI->retTiroBaixoI, BLACK);
 
                         blocosFase1 (texturaTijolos); //Chamada da função que carrega os blocos
 
