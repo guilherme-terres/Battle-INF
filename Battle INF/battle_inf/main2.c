@@ -5,22 +5,21 @@
 #include <string.h>
 #include <time.h>
 
-/*DEFINIÇÕES*/
+/*----- DEFINIÇÕES -----*/
 #define FALSE 0
 #define TRUE 1
 #define MAXTIROS 10
-#define MAXINIMIGOS 25
 
-/*GLOBAIS*/
-int randomMove;
+/*----- GLOBAIS -----*/
+int randomMove; //MOVIMENTAÇÃO RANDÔMICA DO INIMIGO
 
 Image ImgInimigo;
-Texture2D texturaInimigo;
+Texture2D texturaInimigo; //TEXTURA DO INIMIGO
 
 Image ImgEnergy;
-Texture2D texturaEnergia;
+Texture2D texturaEnergia; //TEXTURA DA ENERGIA
 
-/*STRUCTS*/
+/*----- STRUCTS -----*/
 typedef struct shoot{
     Vector2 posicao;
     Color cor;
@@ -28,7 +27,7 @@ typedef struct shoot{
     float raio;
     float sentido;
     float velocidade;
-} Shoot; //Tiro
+} Shoot; //TIRO
 
 typedef struct player{
     Vector2 posicao;
@@ -43,7 +42,7 @@ typedef struct player{
     float rotacao;
     float sentido;
     int kills;
-} Player; //Jogador
+} Player; //JOGADOR
 
 typedef struct enemy{
     Vector2 posicao;
@@ -56,30 +55,32 @@ typedef struct enemy{
     float sentido;
     float rotacao;
     int ativacao;
-} Enemy; //Inimigo
+} Enemy; //INIMIGO
 
 typedef struct energy{
     Vector2 posicao;
     Rectangle retEnergia;
     int ativacao;
-} Energy;
+} Energy; //ENERGIA
 
 typedef struct rectangles{
     Rectangle tamanho[7];
     Rectangle tamanho2[5];
     Rectangle tamanhoB[4];
-} Rectangles; //Retangulos
+} Rectangles; //RETÂNGULOS
 
-/*FUNÇÕES*/
+/*===========================*/
+
+/*-----FUNÇÕES-----*/
 void menu (int screenWidth){
-    DrawRectangle (0,0, screenWidth, 40, DARKGRAY); //Listra cinza escuro
+    DrawRectangle (0,0, screenWidth, 40, DARKGRAY); //LISTRA CINZA ESCURO
     DrawText("Fase 1", 442, 7, 30, GOLD);
-} //Menu da fase 1 - DESENHO
+} //MENU DA FASE 1 - DESENHO
 
 void menu2 (int screenWidth){
-    DrawRectangle (0,0, screenWidth, 40, DARKGRAY); //Listra cinza escuro
+    DrawRectangle (0,0, screenWidth, 40, DARKGRAY); //LISTRA CINZA ESCURO
     DrawText("Fase 2", 442, 7, 30, GOLD);
-} //Menu da fase 2 - DESENHO
+} //MENU DA FASE 2 - DESENHO
 
 void blocosFase1 (Texture2D texturaTijolos){
     for (int i=65; i<=275; i += 30)
@@ -95,7 +96,7 @@ void blocosFase1 (Texture2D texturaTijolos){
     for (int i=550; i<=680; i+=30)
         DrawTexture(texturaTijolos, i, 150, LIGHTGRAY);
     DrawTexture(texturaTijolos, 750, 290, LIGHTGRAY);
-} //Blocos da fase 1 - DESENHO
+} //BLOCOS DA FASE 1 - DESENHO
 
 void blocosFase2 (Texture2D texturaTijolos){
     for (int j=230; j<=400; j+=55){
@@ -110,7 +111,7 @@ void blocosFase2 (Texture2D texturaTijolos){
         DrawTexture(texturaTijolos, i, 355, LIGHTGRAY);
     for (int i=600; i<=800; i+=30)
         DrawTexture(texturaTijolos, i, 410, LIGHTGRAY);
-} //Blocos da fase 2 - DESENHO
+} //BLOCOS DA FASE 2 - DESENHO
 
 void iniciaRets1 (Rectangles *tijolos){
     tijolos->tamanho[0] = (Rectangle){65, 230, 210, 55};
@@ -120,22 +121,22 @@ void iniciaRets1 (Rectangles *tijolos){
     tijolos->tamanho[4] = (Rectangle){590, 95, 206, 55};
     tijolos->tamanho[5] = (Rectangle){550, 150, 173.2, 55};
     tijolos->tamanho[6] = (Rectangle){750, 290, 55, 55};
-}
+} //INICIALIZAÇÃO DOS RETÂNGULOS DA FASE 1
 
 void iniciaRets2 (Rectangles *tijolos2){
-    tijolos2->tamanho2[0] = (Rectangle){60, 215, 267, 217};
-    tijolos2->tamanho2[1] = (Rectangle){294, 95, 385, 52};
-    tijolos2->tamanho2[2] = (Rectangle){645, 285, 205, 55};
-    tijolos2->tamanho2[3] = (Rectangle){693, 340, 208.5, 55};
-    tijolos2->tamanho2[4] = (Rectangle){593, 395, 236, 55};
-}
+    tijolos2->tamanho2[0] = (Rectangle){60, 229.5, 272, 223};
+    tijolos2->tamanho2[1] = (Rectangle){298, 108, 388, 57.5};
+    tijolos2->tamanho2[2] = (Rectangle){650, 298, 207, 57.5};
+    tijolos2->tamanho2[3] = (Rectangle){698, 355, 208.5, 55};
+    tijolos2->tamanho2[4] = (Rectangle){598, 408, 238, 57.5};
+} //INICIALIZAÇÃO DOS RETÂNGULOS DA FASE 2
 
 void iniciaBordas (Rectangles *bordas, int screenWidth, int screenHeight){
     bordas->tamanhoB[0] = (Rectangle){0,0, screenWidth, 40}; //Header
     bordas->tamanhoB[1] = (Rectangle){0, 0, 1, screenHeight}; //Esquerda
     bordas->tamanhoB[2] = (Rectangle){screenWidth - 1, 0, 1, screenHeight}; //Direita
     bordas->tamanhoB[3] = (Rectangle){0, screenHeight, screenWidth, 1}; //Baixo
-}
+} //INICIALIZAÇÃO DAS BORDAS
 
 void inicializaJogador (Player *jogador, int screenWidth, int screenHeight){
     jogador->posicao = (Vector2){(float)screenWidth/2, (float)screenHeight/2};
@@ -146,7 +147,7 @@ void inicializaJogador (Player *jogador, int screenWidth, int screenHeight){
     jogador->pontos = 0;
     jogador->sentido = M_PI;
     jogador->kills = 0;
-}
+} //INICIALIZAÇÃO DA MOVIMENTAÇÃO DO JOGADOR
 
 void inicializaInimigo (Enemy *inimigo, int screenWidth, int screenHeight){
     inimigo->origin = (Vector2){19, 22};
@@ -154,7 +155,7 @@ void inicializaInimigo (Enemy *inimigo, int screenWidth, int screenHeight){
     inimigo->retCollision = (Rectangle){inimigo->posicao.x  -19, inimigo->posicao.y -22, 38, 44};
     inimigo->sentido = 0.0;
     inimigo->ativacao = FALSE;
-}
+} //INICIALIZAÇÃO DA MOVIMENTAÇÃO DO INIMIGO
 
 void inicializaTiroJ (Player *jogador){
     jogador->tiro.posicao = (Vector2){jogador->posicao.x, jogador->posicao.y};
@@ -163,7 +164,7 @@ void inicializaTiroJ (Player *jogador){
     jogador->tiro.cor = BLACK;
     jogador->tiro.velocidade = 5.7;
     jogador->tiro.ativacao = FALSE;
-}
+} ////INICIALIZAÇÃO DO TIRO DO JOGADOR
 
 /*COLISÕES*/
 int collisionPlayer (Rectangles tijolos, Rectangles bordas, Player jogador, Enemy inimigo){
@@ -185,7 +186,7 @@ int collisionPlayer (Rectangles tijolos, Rectangles bordas, Player jogador, Enem
     else retorno = FALSE;
 
     return retorno;
-} // Colisão do player
+} // COLISÃO DO PLAYER DA FASE 1
 
 int collisionPlayer2 (Rectangles tijolos2, Rectangles bordas, Player jogador, Enemy inimigo){
     int retorno;
@@ -204,7 +205,7 @@ int collisionPlayer2 (Rectangles tijolos2, Rectangles bordas, Player jogador, En
     else retorno = FALSE;
 
     return retorno;
-} // Colisão do player
+} // COLISÃO DO PLAYER DA FASE 2
 
 int collisionInimigo (Rectangles tijolos, Rectangles bordas, Enemy inimigo, Player jogador){
     int retorno = 0;
@@ -224,7 +225,27 @@ int collisionInimigo (Rectangles tijolos, Rectangles bordas, Enemy inimigo, Play
         retorno = 1;
 
     return retorno;
-} //Colisão do inimigo
+} //COLISÃO DO INIMIGO DA FASE 1
+
+int collisionInimigo2 (Rectangles tijolos2, Rectangles bordas, Enemy inimigo, Player jogador){
+    int retorno = 0;
+
+    if (CheckCollisionRecs(tijolos2.tamanho2[0], inimigo.retCollision)
+    || CheckCollisionRecs(tijolos2.tamanho2[1], inimigo.retCollision)
+    || CheckCollisionRecs(tijolos2.tamanho2[2], inimigo.retCollision)
+    || CheckCollisionRecs(tijolos2.tamanho2[3], inimigo.retCollision)
+    || CheckCollisionRecs(tijolos2.tamanho2[4], inimigo.retCollision)
+    || CheckCollisionRecs(tijolos2.tamanho2[5], inimigo.retCollision)
+    || CheckCollisionRecs(tijolos2.tamanho2[6], inimigo.retCollision)
+    || CheckCollisionRecs(inimigo.retCollision, jogador.retCollision)
+    || CheckCollisionRecs(bordas.tamanhoB[0], inimigo.retCollision)
+    || CheckCollisionRecs(bordas.tamanhoB[1], inimigo.retCollision)
+    || CheckCollisionRecs(bordas.tamanhoB[2], inimigo.retCollision)
+    || CheckCollisionRecs(bordas.tamanhoB[3], inimigo.retCollision))
+        retorno = 1;
+
+    return retorno;
+} //COLISÃO DO INIMIGO DA FASE 1
 
 int collisionTiro (Rectangles tijolos, Rectangles bordas, Shoot *tiro){
     int retorno = 0;
@@ -243,7 +264,7 @@ int collisionTiro (Rectangles tijolos, Rectangles bordas, Shoot *tiro){
         retorno = 1;
 
     return retorno;
-}
+} //COLISÃO DO TIRO COM OS TIJOLOS E COM AS BORDAS NA FASE 1
 
 int collisionTiro2 (Rectangles tijolos2, Rectangles bordas, Shoot *tiro){
     int retorno = 0;
@@ -253,8 +274,6 @@ int collisionTiro2 (Rectangles tijolos2, Rectangles bordas, Shoot *tiro){
     || CheckCollisionPointRec(tiro->posicao, tijolos2.tamanho2[2])
     || CheckCollisionPointRec(tiro->posicao, tijolos2.tamanho2[3])
     || CheckCollisionPointRec(tiro->posicao, tijolos2.tamanho2[4])
-    || CheckCollisionPointRec(tiro->posicao, tijolos2.tamanho2[5])
-    || CheckCollisionPointRec(tiro->posicao, tijolos2.tamanho2[6])
     || CheckCollisionPointRec(tiro->posicao, bordas.tamanhoB[0])
     || CheckCollisionPointRec(tiro->posicao, bordas.tamanhoB[1])
     || CheckCollisionPointRec(tiro->posicao, bordas.tamanhoB[2])
@@ -262,7 +281,7 @@ int collisionTiro2 (Rectangles tijolos2, Rectangles bordas, Shoot *tiro){
         retorno = 1;
 
     return retorno;
-}
+} //COLISÃO DO TIRO COM OS TIJOLOS E COM AS BORDAS NA FASE 2
 
 int collisionVidas (Shoot *tiro, Player jogador){
     int retorno = 0;
@@ -271,7 +290,7 @@ int collisionVidas (Shoot *tiro, Player jogador){
         retorno = 1;
 
     return retorno;
-}
+} //COLISÃO PARA PERDER VIDAS
 
 int collisionPontos (Shoot *tiro, Enemy inimigo){
     int retorno = 0;
@@ -280,7 +299,7 @@ int collisionPontos (Shoot *tiro, Enemy inimigo){
         retorno = 1;
 
     return retorno;
-}
+} //COLISÃO PARA MATAR INIMIGO E GANHAR PONTOS
 
 void atualizaInimigo (Enemy *inimigo){
     if (randomMove >= 1 && randomMove <= 4){
@@ -304,34 +323,33 @@ void atualizaInimigo (Enemy *inimigo){
         inimigo->sentido = 180;
         inimigo->retCollision = (Rectangle){inimigo->posicao.x -19, inimigo->posicao.y -22, 38, 44};
     }
-}
+} //MOVIMENTAÇÃO ALEATÓRIA DO INIMIGO
 
 void desenhoInimigo (Enemy *inimigo, Texture2D texturaInimigo, Color corInimigo){
     DrawTexturePro(texturaInimigo, inimigo->source, inimigo->retInimigo, inimigo->origin, inimigo->sentido, corInimigo);
-}
+} //DESENHO DO INIMIGO
 
-void tanqueAtirar (Shoot *tiro, float sentido, Vector2 posicao){
+void tanqueAtirar (Shoot *tiro, float sentido, Vector2 posicao, float multiplicador){
     tiro->ativacao = TRUE;
     tiro->sentido = sentido;
     tiro->posicao = posicao;
-    tiro->velocidade = 5.7;
+    tiro->velocidade = 5.7*multiplicador;
     tiro->cor = BLACK;
     tiro->raio = 2.7;
-}
+} //INICIALIZAÇÃO DO TIRO DO TANQUE
 
 void atualizaTiro (Shoot *tiro){
     tiro->posicao.x += tiro->velocidade*sin(tiro->sentido);
     tiro->posicao.y += tiro->velocidade*cos(tiro->sentido);
-}
+} //ATUALIZAÇÃO DA POSIÇÃO DO TIRO
 
 void desenhaTiro (Shoot *tiro){
     DrawCircleV(tiro->posicao, tiro->raio, tiro->cor);
-}
+} //DESENHA O TIRO
 
 void desenhaEnergia (Texture2D texturaEnergia, Energy energia){
     DrawTexture(texturaEnergia, energia.posicao.x, energia.posicao.y, LIGHTGRAY);
-
-}
+} //DESENHA A ENERGIA
 
 int collisionEnergia (Player jogador, Energy energia){
     int retorno = 0;
@@ -340,7 +358,7 @@ int collisionEnergia (Player jogador, Energy energia){
         retorno = 1;
 
     return retorno;
-}
+} //TESTA A COLISÃO DA ENERGIA COM O PLAYER
 
 double spawnInimigo (double tempoInimigo, Enemy *inimigo, Rectangles tijolos, Rectangles bordas, Player jogador){
     if (GetTime() > tempoInimigo + 5 && inimigo->ativacao == FALSE){
@@ -356,27 +374,26 @@ double spawnInimigo (double tempoInimigo, Enemy *inimigo, Rectangles tijolos, Re
         tempoInimigo = GetTime();
 
     return tempoInimigo;
-}
+} //SPAWNA O INIMIGO A CADA 5s
 
 int main(void){
     const int screenWidth = 1000;
     const int screenHeight = 600;
 
     InitWindow(screenWidth, screenHeight, "Battle INF");
-
-    //Mouse
+    //MOUSE
     Vector2 ponteiroMouse = {0.0f, 0.0f};
-
-    //Cores
+    //CORES
     Color corTexto[4] = {LIGHTGRAY, LIGHTGRAY, LIGHTGRAY, LIGHTGRAY}; //Opções do menu
 
-    SetTargetFPS(60);
+    SetTargetFPS(60); //FPS
 
     while (!WindowShouldClose()){
-        /*UPDATE*/
-        ponteiroMouse = GetMousePosition(); //Atualizando o ponteiro do mouse
-        /*DRAW*/
-        BeginDrawing();
+        /*----- UPDATE -----*/
+        ponteiroMouse = GetMousePosition(); //ATUALIZANDO O PONTEIRO DO MOUSE
+
+        /*----- DRAW ------*/
+        BeginDrawing(); //MENU INICIAL
 
             ClearBackground(BLACK);
             DrawText("Battle INF", 360, 80, 50, LIGHTGRAY);
@@ -394,68 +411,63 @@ int main(void){
             DrawText("Sair", 450, 400, 30, corTexto[3]);
 
             if (CheckCollisionPointRec(ponteiroMouse, novoJogo)) corTexto[0] = GOLD;
-            else corTexto[0] = LIGHTGRAY; //Mudança de cor
+            else corTexto[0] = LIGHTGRAY; //MUDANÇA DE COR AO PASSAR O MOUSE POR CIMA
             if (CheckCollisionPointRec(ponteiroMouse, continuar)) corTexto[1] = GOLD;
-            else corTexto[1] = LIGHTGRAY; //Mudança de cor
+            else corTexto[1] = LIGHTGRAY; //MUDANÇA DE COR AO PASSAR O MOUSE POR CIMA
             if (CheckCollisionPointRec(ponteiroMouse, ranking)) corTexto[2] = GOLD;
-            else corTexto[2] = LIGHTGRAY; //Mudança de cor
+            else corTexto[2] = LIGHTGRAY; //MUDANÇA DE COR AO PASSAR O MOUSE POR CIMA
             if (CheckCollisionPointRec(ponteiroMouse, mapas)) corTexto[3] = GOLD;
-            else corTexto[3] = LIGHTGRAY; //Mudança de cor
+            else corTexto[3] = LIGHTGRAY; //MUDANÇA DE COR AO PASSAR O MOUSE POR CIMA
 
-            if (CheckCollisionPointRec(ponteiroMouse, novoJogo) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-                //Cores
+            if (CheckCollisionPointRec(ponteiroMouse, novoJogo) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){ //CLICAR EM NOVO JOGO E CHAMAR A FASE 1
+                //CORES
                 Color corShield[3] = {WHITE, WHITE, WHITE};
 
-                /*TEXTURAS*/
+                //TEXTURAS
                 Image ImgJogador = LoadImage("recursos/jogador.png");
-                Texture2D texturaJogador = LoadTextureFromImage(ImgJogador); //Jogador
+                Texture2D texturaJogador = LoadTextureFromImage(ImgJogador); //JOGADOR
                 ImgInimigo = LoadImage("recursos/inimigo.png");
-                texturaInimigo = LoadTextureFromImage(ImgInimigo); //Inimigo
+                texturaInimigo = LoadTextureFromImage(ImgInimigo); //INIMIGO
                 Image ImgTijolos = LoadImage("recursos/tijolos.png");
-                Texture2D texturaTijolos = LoadTextureFromImage(ImgTijolos); //Tijolos
+                Texture2D texturaTijolos = LoadTextureFromImage(ImgTijolos); //TIJOLOS
                 Image ImgShield = LoadImage("recursos/shield1.png");
-                Texture2D texturaShield = LoadTextureFromImage(ImgShield); //Shield
+                Texture2D texturaShield = LoadTextureFromImage(ImgShield); //SHIELD
                 ImgEnergy = LoadImage("recursos/energy_drop1.png");
-                texturaEnergia = LoadTextureFromImage(ImgEnergy); //Energia
+                texturaEnergia = LoadTextureFromImage(ImgEnergy); //ENERGIA
 
-                /*RETANGULOS DA FASE 1*/
-                //Tijolos
+                //RETÂNGULOS DA FASE 1 - INICIALIZAÇÃO
                 Rectangles tijolos;
-                iniciaRets1 (&tijolos);
+                iniciaRets1 (&tijolos); //TIJOLOS
 
-                //Bordas
                 Rectangles bordas;
-                iniciaBordas(&bordas, screenWidth, screenHeight);
+                iniciaBordas(&bordas, screenWidth, screenHeight); //BORDAS
 
-                /*VETORES E POSICIONAMENTO*/
-                //Jogador
+                //POSICIONAMENTO - INICIALIZAÇÃO
                 Player jogador;
-                inicializaJogador(&jogador, screenWidth, screenHeight);
+                inicializaJogador(&jogador, screenWidth, screenHeight); //JOGADOR
 
-                //Inimigo
                 double tempoInimigo = GetTime();
                 Enemy inimigo;
-                inicializaInimigo(&inimigo, screenWidth, screenHeight);
+                inicializaInimigo(&inimigo, screenWidth, screenHeight); //INIMIGO
 
-                //Tiro jogador
-                inicializaTiroJ(&jogador);
+                inicializaTiroJ(&jogador); //TIRO DO JOGADOR
 
-                //Energia
                 Energy energia;
                 energia.ativacao = FALSE;
-                float multiplicador = 1;
+                float multiplicador = 1; //ENERGIA
 
                 while (!WindowShouldClose() && jogador.vidas != 0 && jogador.kills != 1){
-                    SetRandomSeed(time(NULL));
+                    SetRandomSeed(time(NULL)); //SEED RANDÔMICA
+
                     int posXenergia = GetRandomValue(60, 940);
                     int posYenergia = GetRandomValue(60, 740);
                     int tiroInimigo;
-                    randomMove = GetRandomValue(1,16);
+                    randomMove = GetRandomValue(1,16); //VARIÁVEIS QUE ASSUMEM VALORES RANDÔMICOS
 
-                    //Cores
+                    //CORES
                     Color corInimigo = LIGHTGRAY;
 
-                    /*--------------------------------- GERAÇÃO DA ENERGIA ------------------------------------*/
+                    /*----- GERAÇÃO DA ENERGIA -----*/
                     if (energia.ativacao == FALSE){
                         if (!GetRandomValue(0,16)){
                             energia.ativacao = TRUE;
@@ -470,10 +482,11 @@ int main(void){
                         multiplicador = 1.5;
                     }
 
-                    /*-------------------------------- MOVIMENTAÇÃO DO JOGADOR -------------------------------*/
-                    //Guarda posicao
+                    /*===========================*/
+
+                    /*------ MOVIMENTAÇÃO DO JOGADOR -----*/
                     jogador.posicao_anterior = jogador.posicao;
-                    jogador.retJogador = (Rectangle){jogador.posicao.x + 5, jogador.posicao.y + 16.5, 33, 44};
+                    jogador.retJogador = (Rectangle){jogador.posicao.x + 5, jogador.posicao.y + 16.5, 33, 44}; //GUARDA POSIÇÃO
 
                     if (IsKeyDown(KEY_RIGHT)){
                         jogador.posicao.x += 3.0f*multiplicador;
@@ -500,14 +513,16 @@ int main(void){
                         jogador.sentido = 0;
                     }
 
-                    if (collisionPlayer(tijolos, bordas, jogador, inimigo)) //Colisão do player
+                    if (collisionPlayer(tijolos, bordas, jogador, inimigo)) //COLISÃO DO PLAYER
                         jogador.posicao = jogador.posicao_anterior;
 
-                    jogador.retJogador = (Rectangle){jogador.posicao.x, jogador.posicao.y, 33, 43}; //Retângulo do jogador
+                    jogador.retJogador = (Rectangle){jogador.posicao.x, jogador.posicao.y, 33, 43}; //RETÂNGULO DO JOGADOR
 
-                    /*---------------------------- MOVIMENTAÇÃO DO TANQUE INIMIGO -----------------------------*/
+                    /*===========================*/
+
+                    /*----- MOVIMENTAÇÃO DO TANQUE INIMIGO -----*/
                     inimigo.posicao_anterior = inimigo.posicao;
-                    inimigo.retInimigo = (Rectangle){inimigo.posicao.x, inimigo.posicao.y, 38, 44};
+                    inimigo.retInimigo = (Rectangle){inimigo.posicao.x, inimigo.posicao.y, 38, 44}; //GUARDA POSIÇÃO
 
                     atualizaInimigo(&inimigo);
 
@@ -519,10 +534,12 @@ int main(void){
                         inimigo.retCollision = (Rectangle){-50, -50, 0, 0};
                     }
 
-                    /*---------------------------------- TIROS DO JOGADOR -------------------------------------*/
+                    /*===========================*/
+
+                    /*----- TIROS DO JOGADOR -----*/
                     if (!jogador.tiro.ativacao)
                         if (IsKeyPressed(KEY_SPACE))
-                            tanqueAtirar(&jogador.tiro, jogador.sentido, jogador.posicao);
+                            tanqueAtirar(&jogador.tiro, jogador.sentido, jogador.posicao, multiplicador);
 
                     if (jogador.tiro.ativacao)
                         atualizaTiro(&(jogador.tiro));
@@ -530,7 +547,7 @@ int main(void){
                     if (collisionTiro(tijolos, bordas, &jogador.tiro))
                         jogador.tiro.ativacao = FALSE;
 
-                    if (collisionVidas(&inimigo.tiro, jogador)) //Perder vidas
+                    if (collisionVidas(&inimigo.tiro, jogador)) //PERDER VIDAS
                         jogador.vidas--;
 
                     if (collisionPontos(&jogador.tiro, inimigo)){
@@ -545,21 +562,27 @@ int main(void){
                     if (jogador.tiro.posicao.x > 1000 || jogador.tiro.posicao.x < 0 || jogador.tiro.posicao.y < 40 || jogador.tiro.posicao.y > 800)
                             jogador.tiro.ativacao = FALSE;
 
-                    /*---------------------------------- TIROS DO INIMIGO -------------------------------------*/
+                    /*===========================*/
+
+                    /*----- TIROS DO INIMIGO -----*/
                     if (!inimigo.tiro.ativacao)
                         if (!GetRandomValue(0,16))
-                            tanqueAtirar(&inimigo.tiro, inimigo.sentido, inimigo.posicao);
+                            tanqueAtirar(&inimigo.tiro, inimigo.sentido, inimigo.posicao, multiplicador);
                     if (inimigo.tiro.ativacao)
                         atualizaTiro(&(inimigo.tiro));
                     if (collisionTiro (tijolos, bordas, &inimigo.tiro))
                         inimigo.tiro.ativacao = FALSE;
 
-                    //Apaga os escudos
+                    /*===========================*/
+
+                    //APAGA OS ESCUDOS
                     if (jogador.vidas == 2) corShield[2] = BLANK;
                     if (jogador.vidas == 1) corShield[1] = BLANK;
                     if (jogador.vidas == 0) corShield[0] = BLANK;
 
-                    /*----------------------------------- DESENHOS FASE 1 --------------------------------------*/
+                    /*===========================*/
+
+                    /*----- DESENHOS FASE 1 -----*/
                     BeginDrawing();
 
                         ClearBackground (LIGHTGRAY);
@@ -575,55 +598,49 @@ int main(void){
                         desenhoInimigo(&inimigo, texturaInimigo, corInimigo); //Desenho inimigo
                         tempoInimigo = spawnInimigo(tempoInimigo, &inimigo, tijolos, bordas, jogador);
 
-
-                        //Desenhos tiro inimigo
                         if (inimigo.tiro.ativacao)
-                            desenhaTiro(&inimigo.tiro);
+                            desenhaTiro(&inimigo.tiro); //DESENHO TIRO DO INIMIGO
 
-                        //Desenhos tiro jogador
                         if (jogador.tiro.ativacao)
-                            desenhaTiro(&jogador.tiro);
+                            desenhaTiro(&jogador.tiro); //DESENHO TIRO DO JOGADOR
 
-                        //Desenhos energia
                         if (energia.ativacao == TRUE)
-                            desenhaEnergia(texturaEnergia, energia);
+                            desenhaEnergia(texturaEnergia, energia); //DESENHO ENERGIA
 
-                        blocosFase1 (texturaTijolos); //Obstáculos
+                        blocosFase1 (texturaTijolos); //DESENHO OBSTÁCULOS
 
                     EndDrawing();
-
                 }
 
+                /*----- FASE 2 -----*/
                 if (jogador.kills == 1){
-                    //Jogador
-                    inicializaJogador(&jogador, screenWidth, screenHeight);
+                    //POSICIONAMENTO - INICIALIZAÇÃO
+                    inicializaJogador(&jogador, screenWidth, screenHeight); //INICIALIZAÇÃO DO JOGADOR
 
-                    //Inimigo
-                    inicializaInimigo(&inimigo, screenWidth, screenHeight);
+                    inicializaInimigo(&inimigo, screenWidth, screenHeight); //INICIALIZAÇÃO DO INIMIGO
+                    double tempoInimigo2 = GetTime();
 
-                    //Tiro jogador
-                    inicializaTiroJ(&jogador);
+                    inicializaTiroJ(&jogador); //INICIALIZAÇÃO DO TIRO DO JOGADOR
 
-                    //Energia
                     Energy energia;
                     energia.ativacao = FALSE;
-                    float multiplicador = 1;
+                    float multiplicador = 1; //ENERGIA
 
-                    //Retangulos
+                    //RETÂNGULOS  DOS TIJOLOS
                     Rectangles tijolos2;
                     iniciaRets2(&tijolos2);
 
                     while (!WindowShouldClose()){
-                        SetRandomSeed(time(NULL));
+                        SetRandomSeed(time(NULL)); //SEED RANDÔMICA
                         int posXenergia = GetRandomValue(60, 940);
                         int posYenergia = GetRandomValue(60, 740);
                         int tiroInimigo;
                         randomMove = GetRandomValue(1,16);
 
-                        //Cores
+                        //CORES
                         Color corInimigo = LIGHTGRAY;
 
-                        /*--------------------------------- GERAÇÃO DA ENERGIA ------------------------------------*/
+                        /*----- GERAÇÃO DA ENERGIA -----*/
                         if (energia.ativacao == FALSE){
                             if (!GetRandomValue(0,16)){
                                 energia.ativacao = TRUE;
@@ -638,52 +655,64 @@ int main(void){
                             multiplicador = 1.5;
                         }
 
-                        /*-------------------------------- MOVIMENTAÇÃO DO JOGADOR -------------------------------*/
+                        /*===========================*/
+
+                        /*----- MOVIMENTAÇÃO DO JOGADOR -----*/
                         jogador.posicao_anterior = jogador.posicao;
-                        jogador.retJogador = (Rectangle){jogador.posicao.x + 5, jogador.posicao.y + 16.5, 33, 44};
+                        jogador.retJogador = (Rectangle){jogador.posicao.x + 5, jogador.posicao.y + 16.5, 33, 44}; //GUARDA POSIÇÃO
 
                         if (IsKeyDown(KEY_RIGHT)){
                             jogador.posicao.x += 3.0f*multiplicador;
                             jogador.rotacao = 90;
-                            jogador.retCollision = (Rectangle){jogador.posicao.x - 23, jogador.posicao.y - 16.5, 43, 33};
+                            jogador.retCollision = (Rectangle){jogador.posicao.x - 18, jogador.posicao.y, 43, 33};
                             jogador.sentido = M_PI/2;
                         }
                         if (IsKeyDown(KEY_LEFT)){
                             jogador.posicao.x -= 3.0f*multiplicador;
                             jogador.rotacao = -90;
-                            jogador.retCollision = (Rectangle){jogador.posicao.x - 23, jogador.posicao.y - 16.5, 43, 33};
+                            jogador.retCollision = (Rectangle){jogador.posicao.x - 16, jogador.posicao.y, 43, 33};
                             jogador.sentido = (-1*M_PI)/2;
                         }
                         if (IsKeyDown(KEY_UP)){
                             jogador.posicao.y -= 3.0f*multiplicador;
                             jogador.rotacao = 0;
-                            jogador.retCollision = (Rectangle){jogador.posicao.x - 16.5, jogador.posicao.y - 21.5, 33, 43};
+                            jogador.retCollision = (Rectangle){jogador.posicao.x - 12, jogador.posicao.y -5, 33, 43};
                             jogador.sentido = M_PI;
                         }
                         if (IsKeyDown(KEY_DOWN)){
                             jogador.posicao.y += 3.0f*multiplicador;
                             jogador.rotacao = 180;
-                            jogador.retCollision = (Rectangle){jogador.posicao.x - 16.5, jogador.posicao.y - 21.5, 33, 43};
+                            jogador.retCollision = (Rectangle){jogador.posicao.x - 12, jogador.posicao.y - 5, 33, 43};
                             jogador.sentido = 0;
                         }
 
-                        if (collisionPlayer2(tijolos2, bordas, jogador, inimigo) == TRUE)
+                        if (collisionPlayer2(tijolos2, bordas, jogador, inimigo) == TRUE) //COLISÃO DO JOGADOR
                             jogador.posicao = jogador.posicao_anterior;
 
-                        /*---------------------------------- TIROS DO JOGADOR -------------------------------------*/
-                        int colTiro2 = collisionTiro2(tijolos, bordas, &(jogador.tiro));
+                        /*===========================*/
+
+                        /*----- MOVIMENTAÇÃO DO INIMIGO -----*/
+                        inimigo.posicao_anterior = inimigo.posicao;
+                        inimigo.retInimigo = (Rectangle){inimigo.posicao.x, inimigo.posicao.y, 38, 44}; //GUARDA POSIÇÃO
+
+                        atualizaInimigo(&inimigo);
+                        if (collisionInimigo2(tijolos2, bordas, inimigo, jogador) == TRUE)
+                            inimigo.posicao = inimigo.posicao_anterior;
+
+                        /*------ TIROS DO JOGADOR ------*/
+                        //int colTiro2 = collisionTiro2(tijolos, bordas, &(jogador.tiro));
 
                         if (!jogador.tiro.ativacao)
                             if (IsKeyPressed(KEY_SPACE))
-                                tanqueAtirar(&jogador.tiro, jogador.sentido, jogador.posicao);
+                                tanqueAtirar(&jogador.tiro, jogador.sentido, jogador.posicao, multiplicador);
 
                         if (jogador.tiro.ativacao)
                             atualizaTiro(&(jogador.tiro));
 
-                        if (colTiro2 == TRUE)
+                        if (collisionTiro2(tijolos, bordas, &(jogador.tiro)) == TRUE)
                             jogador.tiro.ativacao = FALSE;
 
-                        if (collisionVidas(&inimigo.tiro, jogador)) //Perder vidas
+                        if (collisionVidas(&inimigo.tiro, jogador)) //PERDER VIDAS
                             jogador.vidas--;
 
                         if (collisionPontos(&jogador.tiro, inimigo)){
@@ -698,6 +727,8 @@ int main(void){
                         if (jogador.tiro.posicao.x > 1000 || jogador.tiro.posicao.x < 0 || jogador.tiro.posicao.y < 40 || jogador.tiro.posicao.y > 800)
                                 jogador.tiro.ativacao = FALSE;
 
+
+                        /*----- DESENHO DA FASE 2 -----*/
                         BeginDrawing();
 
                             ClearBackground (LIGHTGRAY);
@@ -711,9 +742,11 @@ int main(void){
 
                             DrawTexturePro(texturaJogador, jogador.source, jogador.retJogador, jogador.origin, jogador.rotacao, LIGHTGRAY); //Desenho jogador
 
-                            //Desenhos tiro jogador
+                            desenhoInimigo(&inimigo, texturaInimigo, corInimigo); //DESENHO INIMIGO
+                            tempoInimigo2 = spawnInimigo(tempoInimigo, &inimigo, tijolos2, bordas, jogador);
+
                             if (jogador.tiro.ativacao == TRUE)
-                                desenhaTiro(&jogador.tiro);
+                                desenhaTiro(&jogador.tiro); //DESENHO DO TIRO DO JOGADOR
 
                         EndDrawing();
 
